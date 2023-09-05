@@ -11,12 +11,12 @@ const ProductDetails = () => {
 
 
     const handleAddToCart = () => {
-        addToCart(product, quantity);
+        addToCart(product, Number(quantity));
         // Optionally, display a message or navigate the user to the cart page
     };
 
     const handleCheckout = () => {
-        addToCart(product, quantity);
+        addToCart(product, Number(quantity));
         // Navigate the user to the checkout page
         navigate("/cart");
     };

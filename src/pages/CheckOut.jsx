@@ -1,9 +1,15 @@
 import React, { useContext, useState } from 'react';
 import { CartContext } from '../context/CartContext';
+import { useNavigate } from 'react-router-dom';
+import { auth, db } from '../firebaseConfig';
+import { signInAnonymously } from 'firebase/auth';
+import { collection, addDoc } from 'firebase/firestore';
 
 const CheckoutPage = () => {
-    const { cart } = useContext(CartContext);
+    const navigate = useNavigate();
+    const { cart,clearCart } = useContext(CartContext);
     const [message, setMessage] = useState('');
+    const [orderPlaced,setOrderPlaced] = useState(false);
     const [formData, setFormData] = useState({
         fullName: '',
         address: '',
@@ -24,7 +30,7 @@ const CheckoutPage = () => {
         }));
     };
 
-    const handleFinish = () => {
+    const handleFinish = async () => {
         const { fullName, address, city, country, zipCode } = formData;
 
         if (!fullName || !address || !city || !country || !zipCode) {
@@ -34,7 +40,31 @@ const CheckoutPage = () => {
 
         // Here, you can send the order details to the server or do any other processing.
         // For now, we'll just display a dummy message.
-        setMessage('Order placed successfully!');
+        try {
+            // Authenticate the user anonymously
+            await signInAnonymously(auth);
+    
+            // Save the order details to Firestore
+            await addDoc(collection(db, 'orders'),{
+                fullName,
+                address,
+                city,
+                country,
+                zipCode,
+                cart,
+                total: calculateTotal()
+            });
+    
+            setMessage('Order placed successfully!');
+            setOrderPlaced(true);
+            clearCart();
+            auth.signOut();
+
+        } catch (error) {
+            setOrderPlaced(false);
+            console.error("Error placing order: ", error);
+            setMessage('Error placing the order. Please try again.');
+        }
     };
 
     return (
@@ -59,7 +89,7 @@ const CheckoutPage = () => {
                 <input type="text" name="zipCode" className="form-control mb-3" placeholder="Zip Code" onChange={handleInputChange} />
             </div>
 
-            <button className="btn btn-success" onClick={handleFinish}>Finish</button>
+            {orderPlaced ? (<button className="btn btn-success" onClick={() => navigate("/") }>Go to Home</button>) : <button className="btn btn-success" onClick={handleFinish}>Finish</button>  }
 
             {message && <div className="alert alert-info mt-4">{message}</div>}
         </div>
