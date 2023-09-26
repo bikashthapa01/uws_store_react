@@ -41,6 +41,7 @@ const CheckoutPage = () => {
         // Here, you can send the order details to the server or do any other processing.
         // For now, we'll just display a dummy message.
         try {
+            
             // Authenticate the user anonymously
             await signInAnonymously(auth);
     
